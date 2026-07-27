@@ -24,6 +24,7 @@ export class UIManager {
   }
 
   init() {
+    this.bindSplashScreen();
     this.bindAudioControls();
     this.bindPatternGrid();
     this.bindSettings();
@@ -32,6 +33,22 @@ export class UIManager {
 
     // Initial grid render
     this.renderPatternGrid();
+  }
+
+  bindSplashScreen() {
+    const splash = document.getElementById('splash-screen');
+    const btnExplore = document.getElementById('btn-explore');
+    if (!splash) return;
+
+    const dismissSplash = () => {
+      splash.classList.add('fade-out');
+      this.audio.init();
+      this.audio.resume();
+    };
+
+    if (btnExplore) {
+      btnExplore.addEventListener('click', dismissSplash);
+    }
   }
 
   /* 1. Audio Controls & Source Badges */
