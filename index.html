@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraSonic - 100-Pattern Web Audio Visualizer</title>
+  <meta name="description" content="AuraSonic is a high-performance audio visualizer with 100 procedural patterns, Web Audio API analysis, WebGL & Canvas 2D graphics.">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Load Three.js library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+  <!-- Viewport Canvas Area -->
+  <div id="viewport-container">
+    <canvas id="ambient-canvas"></canvas>
+    <canvas id="webgl-canvas"></canvas>
+    <canvas id="canvas2d"></canvas>
+  </div>
+
+  <!-- FPS & Performance Badge -->
+  <div id="fps-counter">60 FPS</div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="toast-msg">Pattern Changed</div>
+
+  <!-- UI Overlay -->
+  <div id="ui-root">
+
+    <!-- Header Bar -->
+    <header class="header-bar">
+      <div class="brand">
+        <div class="brand-icon">⚡</div>
+        <div class="brand-title">AuraSonic</div>
+        <div id="pattern-badge" class="active-pattern-badge" title="Click to open pattern selector (M)">
+          <span class="active-pattern-number">#01</span>
+          <span id="active-pattern-name">Fluid Silk Ribbons</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="btn-mute" class="glass-btn active" title="Toggle Visualizer Speaker Output">
+          <span id="mute-icon">🔇</span> Sound: <span id="mute-status">SILENT</span>
+        </button>
+        <button id="btn-automix" class="glass-btn" title="Toggle Auto-Mix Mode (A)">
+          <span>✨</span> Auto-Mix: <span id="automix-status">OFF</span>
+        </button>
+        <button id="btn-drawer" class="glass-btn" title="Patterns Grid Drawer & Infinite Trippy Generator (M)">
+          <span>🎨</span> Patterns (∞ Infinite)
+        </button>
+        <button id="btn-settings" class="glass-btn glass-btn-icon" title="Audio & Performance Settings">
+          <span>⚙️</span>
+        </button>
+        <button id="btn-fullscreen" class="glass-btn glass-btn-icon" title="Toggle Fullscreen (F)">
+          <span>⛶</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Bottom HUD Dock -->
+    <div class="bottom-hud">
+      <!-- Audio Controls Card -->
+      <div class="audio-controls-card">
+        <div class="audio-track-info">
+          <div class="track-title" id="track-name">Procedural Electronic Synth</div>
+          <div class="audio-source-badges">
+            <button class="source-chip active" id="source-synth" title="Built-in Procedural Audio Generator">Synth Demo</button>
+            <button class="source-chip" id="source-mic" title="Listen to background music playing from laptop speakers">Listen Background Audio</button>
+            <button class="source-chip" id="source-system" title="Capture YouTube / Spotify / Desktop Audio">YouTube / Tab Share</button>
+            <button class="source-chip" id="source-file" title="Upload custom audio file">Upload File</button>
+            <input type="file" id="audio-file-input" accept="audio/*" style="display: none;">
+          </div>
+        </div>
+
+        <div class="audio-bar-row">
+          <button id="btn-play-pause" class="play-pause-btn" title="Play / Pause Audio (Space)">
+            <span id="play-icon">▶</span>
+          </button>
+
+          <div class="scrub-container">
+            <input type="range" id="audio-scrubber" value="0" min="0" max="100" step="0.1">
+            <div class="time-display">
+              <span id="time-current">00:00</span>
+              <span id="time-duration">03:45</span>
+            </div>
+          </div>
+
+          <div class="vol-container">
+            <span style="font-size: 0.85rem; color: #aaa;">🔊</span>
+            <input type="range" id="volume-slider" value="0.8" min="0" max="1" step="0.01">
+          </div>
+        </div>
+      </div>
+
+      <!-- Pattern Navigation Bar -->
+      <div class="pattern-nav-dock">
+        <button id="btn-prev-pattern" class="nav-arrow-btn" title="Previous Pattern (Left Arrow)">◀</button>
+        <div class="hotkeys-bar">
+          <span><span class="key-badge">←</span> <span class="key-badge">→</span> Switch</span>
+          <span><span class="key-badge">Space</span> Play/Pause</span>
+          <span><span class="key-badge">A</span> Auto-Mix</span>
+          <span><span class="key-badge">M</span> Grid Drawer</span>
+        </div>
+        <button id="btn-next-pattern" class="nav-arrow-btn" title="Next Pattern (Right Arrow)">▶</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 100 Pattern Selector Modal / Drawer -->
+  <div id="drawer-modal" class="modal-overlay">
+    <div class="drawer-container">
+      <div class="drawer-header">
+        <div class="drawer-title-area">
+          <div class="drawer-title">Pattern Gallery</div>
+          <div class="drawer-count-badge">115+ Modes (Infinite Generator)</div>
+        </div>
+        <button id="btn-close-drawer" class="close-btn" title="Close Drawer">✕</button>
+      </div>
+
+      <div class="drawer-filter-bar">
+        <div class="category-tabs">
+          <button class="tab-btn active" data-category="all">All (115+)</button>
+          <button class="tab-btn" data-category="waves">Group A: Waves & Fluids</button>
+          <button class="tab-btn" data-category="geometric">Group B: Geometric & Structural</button>
+          <button class="tab-btn" data-category="particles">Group C: Particles & Cosmos</button>
+          <button class="tab-btn" data-category="equalizer">Group D: Equalizer & Spectrum</button>
+          <button class="tab-btn" data-category="organic">Group E: Abstract & Organic</button>
+          <button class="tab-btn" data-category="advanced">Group F: Advanced Realistic</button>
+        </div>
+
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="pattern-search" class="search-input" placeholder="Search 115+ patterns...">
+        </div>
+      </div>
+
+      <!-- 100 Grid Items Container -->
+      <div id="pattern-grid" class="pattern-grid-scroll"></div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal-overlay">
+    <div class="settings-panel">
+      <div class="drawer-header" style="padding: 0 0 1rem 0; border: none;">
+        <div class="drawer-title">Audio & Engine Settings</div>
+        <button id="btn-close-settings" class="close-btn">✕</button>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-label">
+          <span>🎨 Color Palette Preset</span>
+          <span class="settings-val" id="val-palette">Cyberpunk Neon</span>
+        </div>
+        <select id="select-palette" class="glass-select" style="width: 100%; padding: 0.6rem; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; margin-top: 0.4rem;">
+          <option value="cyberpunk">Cyberpunk Neon (Cyan / Pink / Purple)</option>
+          <option value="solar">Solar Flare (Gold / Amber / Fire Red)</option>
+          <option value="deepSpace">Deep Space (Violet / Indigo / Teal)</option>
+          <option value="monochrome">Monochrome Silver (White / Charcoal)</option>
+          <option value="aurora">Aurora Glow (Emerald / Cyan / Blue)</option>
+        </select>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-label">
+          <span>⚡ Pattern Motion Speed</span>
+          <span class="settings-val" id="val-speed">1.0x (Normal)</span>
+        </div>
+        <input type="range" id="slider-speed" min="0.1" max="3.0" step="0.1" value="1.0" title="Slow down or speed up pattern animation motion">
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-label">
+          <span>Resolution Scale</span>
+          <span class="settings-val" id="val-resolution">1.0x</span>
+        </div>
+        <input type="range" id="slider-resolution" min="0.5" max="1.5" step="0.25" value="1.0">
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-label">
+          <span>Particle Density</span>
+          <span class="settings-val" id="val-density">High</span>
+        </div>
+        <input type="range" id="slider-density" min="1" max="4" step="1" value="3">
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-label">
+          <span>Sub-Bass Gain Boost</span>
+          <span class="settings-val" id="val-bass">1.2x</span>
+        </div>
+        <input type="range" id="slider-bass" min="0.5" max="2.5" step="0.1" value="1.2">
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-label">
+          <span>Treble / Brightness Sensitivity</span>
+          <span class="settings-val" id="val-treble">1.0x</span>
+        </div>
+        <input type="range" id="slider-treble" min="0.5" max="2.5" step="0.1" value="1.0">
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-label">
+          <span>Auto-Mix Interval</span>
+          <span class="settings-val" id="val-automix-time">15 Seconds</span>
+        </div>
+        <input type="range" id="slider-automix-time" min="10" max="60" step="5" value="15">
+      </div>
+    </div>
+  </div>
+
+  <!-- App Script Entry -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
